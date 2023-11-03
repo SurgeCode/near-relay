@@ -1,0 +1,21 @@
+{
+  "name": "near-relay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@near-js/crypto": "^0.0.5",
+    "@near-js/transactions": "^0.2.1",
+    "@near-wallet-selector/core": "^8.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.10"
+  }
+}
