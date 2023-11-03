@@ -1,14 +1,13 @@
-import relay from ".";
+import { relay } from ".";
 const express = require('express');
 const app = express();
-var cors = require('cors')
-app.use(cors())
+
 app.use(express.json());
 
 app.post('/', async (req: any, res: any) => {
     const body = req.body;
 
-    const result = await relay(body, 'testnet', "", "")
+    const result = await relay(body, { network: 'testnet', relayerAccountId: "", relayerPrivateKey: "" })
 
     res.json({ message: 'Relayer ', data: result });
 });

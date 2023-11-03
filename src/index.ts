@@ -1,5 +1,5 @@
 import { deserialize } from "borsh";
-import { SCHEMA } from "./near-schema";
+import { SCHEMA } from "../near-schema";
 import { SignedDelegate } from "@near-js/transactions";
 import { Account } from "@near-js/accounts";
 import { KeyPair } from "@near-js/crypto";
@@ -8,7 +8,7 @@ import { JsonRpcProvider } from "@near-js/providers";
 import { InMemorySigner } from "@near-js/signers";
 import { actionCreators } from "@near-js/transactions";
 import { FinalExecutionOutcome } from "@near-wallet-selector/core";
-
+import 'dotenv/config'
 export const { signedDelegate } = actionCreators;
 
 /**
@@ -43,6 +43,7 @@ export interface RelayOptions {
  * @returns A promise that resolves to the final execution outcome.
  * @throws An error if required options are missing.
  */
+
 export async function relay(encodedDelegate: Uint8Array, options: RelayOptions = {}): Promise<FinalExecutionOutcome> {
   const {
     network = process.env.NEAR_NETWORK,
