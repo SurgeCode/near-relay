@@ -1,15 +1,14 @@
-import { relay } from ".";
+import { relay } from "./src";
 const express = require('express');
 const app = express();
-
+var cors = require('cors')
+app.use(cors())
 app.use(express.json());
 
 app.post('/', async (req: any, res: any) => {
     const body = req.body;
-
-    const result = await relay(body, { network: 'testnet', relayerAccountId: "", relayerPrivateKey: "" })
-
-    res.json({ message: 'Relayer ', data: result });
+    const result = await relay(body)
+    res.json({ message: 'Relayed', data: result });
 });
 
 const PORT = 5000;
