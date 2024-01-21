@@ -1,4 +1,4 @@
-import { relay } from "./src";
+import { createAccount, relay } from "./src";
 const express = require('express');
 const app = express();
 var cors = require('cors')
@@ -8,6 +8,12 @@ app.use(express.json());
 app.post('/', async (req: any, res: any) => {
     const body = req.body;
     const result = await relay(body)
+    res.json({ message: 'Relayed', data: result });
+});
+
+app.post('/create-account', async (req: any, res: any) => {
+    const body = req.body;
+    const result = await createAccount(body.accountId, body.publicKey)
     res.json({ message: 'Relayed', data: result });
 });
 
