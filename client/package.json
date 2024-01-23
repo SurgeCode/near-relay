@@ -1,0 +1,33 @@
+{
+    "name": "@mintbase-js/react",
+    "version": "0.5.1-beta-prerelease.1",
+    "description": "React app tools for Mintbase JS SDK",
+    "main": "lib/index.js",
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc && tsc --watch & jest --watch --coverage",
+        "lint": "eslint . --fix --ext ts --ext tsx",
+        "test": "jest --coverage"
+    },
+    "files": [
+        "lib"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@testing-library/react": "^13.4.0",
+        "@testing-library/user-event": "^14.4.3"
+    },
+    "dependencies": {
+        "@mintbase-js/data": "0.5.1-beta.4",
+        "@near-js/biometric-ed25519": "1.0.1",
+        "isomorphic-unfetch": "^4.0.2",
+        "near-api-js": "^2.1.4",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    }
+}
