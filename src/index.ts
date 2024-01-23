@@ -88,6 +88,13 @@ async function submitTransaction(
 }
 
 
+/**
+ * Creates a new account with the given account ID and public key.
+ *
+ * @param {string} accountId - The ID of the new account to be created.
+ * @param {string} publicKey - The public key to be associated with the new account.
+ * @return {Promise<FinalExecutionOutcome>} The result of the account creation process.
+ */
 export async function createAccount(
     accountId: string,
     publicKey: string,
@@ -97,7 +104,7 @@ export async function createAccount(
       const relayerAccount = await getRelayer()  
   
       const result = await relayerAccount.functionCall({
-        contractId: "testnet",
+        contractId: network == "mainnet" ? "near" : "testnet",
         methodName: "create_account",
         args: {
           new_account_id: accountId,
@@ -113,6 +120,11 @@ export async function createAccount(
     }
   }
 
+  /**
+   * Retrieves the relayer account using the provided network and account ID.
+   *
+   * @return {Promise<Account>} The relayer account object.
+   */
   async function getRelayer(){
     
     const provider = new JsonRpcProvider({
