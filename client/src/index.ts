@@ -8,6 +8,14 @@ import { Account, KeyPair, Near, keyStores } from "near-api-js";
 import { accountsByPublicKey } from '@mintbase-js/data';
 
 
+/**
+ * Generates a new keypair locally and stores it in passkey and then sends the
+ * account ID and publicKey to a relayer to be created on chain via a smart contract call
+ * 
+ * @param {string} relayerUrl - The URL of the server to send the request to.
+ * @param {string} accountId - The ID of the account to create.
+ * @returns {Promise<any>} - A promise that resolves to the response from the server.
+ */
 export async function createAccount(relayerUrl: string, accountId: string): Promise<any> {
 
     const key = await createKey(accountId)
