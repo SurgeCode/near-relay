@@ -1,15 +1,16 @@
 
 # @near-relay
 
-Tooling to simplify metatransactions development to be as easy as possible on NEAR.
+The @near-relay library streamlines the development of meta transactions on the NEAR Protocol, aiming to simplify the process for developers. 
 
-Metatransactions are a way to allow a signed transaction to be delegated to another account to be submitted (relayer). This allows the signer to not have to pay for gas allowing a better onboarding experience.
+Meta transactions enable a signed transaction to be delegated to another account (the relayer) for submission. This delegation mechanism eliminates the need for the signer to cover gas fees, thereby enhancing the onboarding experience for users.
 
 ## @near-relay/server
 
-The server side of the package exposes methods to more easily submit delegated transactions in this case "relay" and "createAccount"
+The server-side component of the package offers methods that facilitate the submission of delegated transactions, including "relay" and "createAccount".
 
-Here is an example of how these could be used in a simple server
+### Server Example 
+Here's a basic example demonstrating how these methods can be utilized within a server:
 
 [This code can be easily emulated to produce simple relayer](https://github.com/SurgeCode/near-relay/blob/main/server/server.ts)
 ```ts
@@ -30,16 +31,18 @@ app.post('/create-account', async (req: any, res: any) => {
 
 ## @near-relay/client
 
-The client side uses @near-js/biometric-ed25519 to handle creation of keypairs using passkey which then get used to sign transactions which are then sent to a relayer
+The client-side module employs @near-js/biometric-ed25519 to facilitate the creation of keypairs using a passkey. These keypairs are then used to sign transactions, which are subsequently sent to a relayer for processing.
 
-Create account creates an arbitrary keypair using passkey. Its public key along with the account ID received as argument gets sent to the relayerUrl which in this case should be an api endpoint that calls the @near-relay/server createAccount method
+### Creating an Account
+
+The createAccount function generates an arbitrary keypair using a passkey. The resulting public key, along with the specified account ID, is sent to the designated relayerUrl, which should be an API endpoint invoking the createAccount method on the server side.
 ```ts
 const receipt = createAccount(relayerUrl: string, accountId: string)
 ```
 
 
-Relay transaction is a method that allows you to easily get the keypair from passkey, create a transaction sign it, encode it and send it to a relayer with a single line
-In this case relayer url should be the correponding api route which calls relay()
+### Relaying Transactions
+The relayTransaction function simplifies the process of obtaining a keypair from a passkey, creating a transaction, signing it, encoding it, and sending it to a relayer – all in a single line of code. The relayerUrl parameter should correspond to the appropriate API route invoking the relay() method on the server side.
 ```ts
 const receipt = relayTransaction(action: Action, receiverId: string, relayerUrl: string)
 ``````
