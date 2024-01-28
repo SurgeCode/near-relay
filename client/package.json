@@ -1,7 +1,7 @@
 {
-    "name": "@mintbase-js/react",
-    "version": "0.5.1-beta-prerelease.1",
-    "description": "React app tools for Mintbase JS SDK",
+    "name": "@near-relay/client",
+    "version": "0.0.1",
+    "description": "Meta transaction tooling for NEAR",
     "main": "lib/index.js",
     "scripts": {
         "build": "tsc",

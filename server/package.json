@@ -1,7 +1,7 @@
 {
-  "name": "near-relay",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@near-relay/server",
+  "version": "0.0.1",
+  "description": "Meta transaction tooling for NEAR",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
