@@ -1,10 +1,8 @@
 import { createKey, getKeys } from "@near-js/biometric-ed25519";
-import * as nearAPI from "near-api-js";
-import { accountsByPublicKey } from '@mintbase-js/data';
-import { encodeSignedDelegate } from "@near-js/transactions";
-import { Action, FunctionCallAction } from "@near-wallet-selector/core";
-import { createAction } from "@near-wallet-selector/wallet-utils";
-
+import * as nearAPI from "near-api-js"; 
+import {accountsByPublicKey} from '@mintbase-js/data'
+import { Action, actionCreators, encodeSignedDelegate } from "@near-js/transactions";
+import BN from "bn.js";
 /**
  * Generates a new keypair locally and stores it in passkey and then sends the
  * account ID and publicKey to a relayer to be created on chain via a smart contract call
@@ -42,39 +40,33 @@ export async function createAccount(relayerUrl: string, accountId: string): Prom
  * @returns {Promise<any>} - Most likely a receipt (depends on format being returned by relayer).
  * @throws {Error} - If there is an error relaying the transaction.
  */
-export async function relayTransaction(action: any) {
+export async function relayTransaction(action: Action, receiverId: string, relayerUrl: string) {
     const keys = await getKeys('this-shouldnt-be-required');
     const account = await getNearAccount('mainnet', keys);
 
-    //test
-    console.log(account)
-    console.log(action)
-    
-    const x = await account.addKey("fhjdskjfhsdfjsdpfjdlçsçlsdf")
+      
+    const signedDelegate = await account.signedDelegate({
+        actions: [action],
+        blockHeightTtl: 60,
+        receiverId: receiverId,
+    })
 
-    // const signedDelegate = await account.signedDelegate({
-    //     actions: [createAction(action)],
-    //     blockHeightTtl: 60,
-    //     receiverId: '1.minsta.mintbus.near',
-    // })
 
-    // console.log(signedDelegate)
+    try {
+        const res = await fetch(relayerUrl, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify(Array.from(encodeSignedDelegate(signedDelegate))),
+            headers: new Headers({ "Content-Type": "application/json" }),
+        });
 
-    // try {
-    //     const res = await fetch("/api/relay", {
-    //         method: "POST",
-    //         mode: "cors",
-    //         body: JSON.stringify(Array.from(encodeSignedDelegate(signedDelegate))),
-    //         headers: new Headers({ "Content-Type": "application/json" }),
-    //     });
-
-    //     if (res.ok) {
-    //         const result = await res.json();
-    //         return result;
-    //     }
-    // } catch (e) {
-    //     throw new Error('Error relaying transaction');
-    // }
+        if (res.ok) {
+            const result = await res.json();
+            return result;
+        }
+    } catch (e) {
+        throw new Error(e);
+    }
 }
 
 
@@ -84,8 +76,8 @@ export const getNearAccount = async (
 ): Promise<nearAPI.Account | null> => {
 
     const {keyPair, accountId} = await getCorrectPublicKey(keys);
-
-    if (!keyPair) {
+  
+    if (!keyPair) { 
         console.error('No correct key found for the given account ID.');
         return null;
     }
@@ -126,20 +118,16 @@ export const getCorrectPublicKey = async (keys: [nearAPI.KeyPair, nearAPI.KeyPai
     throw new Error("No account found for key");
 };
 
-export const getMintAction = (media: string, reference: string, nft_contract_id: string): any => {
-    const obj: FunctionCallAction = {
-        type: "FunctionCall",
-        params: {
-            methodName: "mint",
-            args: {
-                metadata: {media:"dXQsx5qnoRxnAeNmZA3T3N-Q2WmbVzBwUooclwUKlgw"},
-                nft_contract_id: "drop.mintbase1.near"
-            },
-            gas: "200000000000000",
-            deposit: "10000000000000000000000"
-        }
-    };
-    return obj;
+export const getMintAction = (nftContractId: string, media?: string, reference?: string): Action => {
+    return actionCreators.functionCall(
+        'mint',
+        {
+            metadata: {media: media, reference: reference},
+               nft_contract_id: nftContractId
+       },
+        new BN("200000000000000"),
+        new BN("10000000000000000000000")
+      );
 }
 
 

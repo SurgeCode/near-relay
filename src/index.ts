@@ -1,4 +1,4 @@
-import { deserialize } from "borsh";
+import { deserialize} from "borsh";
 import { SCHEMA } from "../near-schema";
 import { SignedDelegate } from "@near-js/transactions";
 import { Account } from "@near-js/accounts";
@@ -7,9 +7,10 @@ import { InMemoryKeyStore } from "@near-js/keystores";
 import { JsonRpcProvider } from "@near-js/providers";
 import { InMemorySigner } from "@near-js/signers";
 import { actionCreators } from "@near-js/transactions";
+export const { signedDelegate } = actionCreators;
 import { FinalExecutionOutcome } from "@near-wallet-selector/core";
 import 'dotenv/config'
-export const { signedDelegate } = actionCreators;
+
 
 
 const relayerAccountId: any = process.env.RELAYER_ACCOUNT_ID 
@@ -60,6 +61,7 @@ export async function relay(encodedDelegate: Uint8Array, options: RelayOptions =
     SignedDelegate,
     Buffer.from(new Uint8Array(encodedDelegate))
   );
+
 
   return submitTransaction(deserializeDelegate);
 }
