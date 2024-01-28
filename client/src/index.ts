@@ -1,8 +1,8 @@
 import { createKey, getKeys } from "@near-js/biometric-ed25519";
-import * as nearAPI from "near-api-js"; 
 import {accountsByPublicKey} from '@mintbase-js/data'
 import { Action, actionCreators, encodeSignedDelegate } from "@near-js/transactions";
 import BN from "bn.js";
+import { Account, KeyPair, Near, keyStores } from "near-api-js";
 /**
  * Generates a new keypair locally and stores it in passkey and then sends the
  * account ID and publicKey to a relayer to be created on chain via a smart contract call
@@ -69,11 +69,17 @@ export async function relayTransaction(action: Action, receiverId: string, relay
     }
 }
 
-
+/**
+ * Retrieves a instaited NEAR account using the provided keys provided from the biometric method.
+ * 
+ * @param network - The network to connect to (e.g., 'testnet' or 'mainnet').
+ * @param keys - An array containing two KeyPair objects returned from getKeys.
+ * @returns A promise that resolves to the Account object or null if no correct key is found.
+ */
 export const getNearAccount = async (
     network: string,
-    keys?: [nearAPI.KeyPair, nearAPI.KeyPair],
-): Promise<nearAPI.Account | null> => {
+    keys: [KeyPair, KeyPair],
+): Promise<Account | null> => {
 
     const {keyPair, accountId} = await getCorrectPublicKey(keys);
   
@@ -82,7 +88,7 @@ export const getNearAccount = async (
         return null;
     }
 
-    const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
+    const keyStore = new keyStores.InMemoryKeyStore();
     await keyStore.setKey(network, accountId, keyPair);
 
     const networkConfig = {
@@ -92,15 +98,22 @@ export const getNearAccount = async (
         helperUrl: `https://helper.${network}.near.org`,
     };
 
-    const near = new nearAPI.Near({
+    const near = new Near({
         ...networkConfig,
         deps: { keyStore },
     });
 
-    return new nearAPI.Account(near.connection, accountId);
+    return new Account(near.connection, accountId);
 };
 
-export const getCorrectPublicKey = async (keys: [nearAPI.KeyPair, nearAPI.KeyPair], username?: string): Promise<{keyPair: nearAPI.KeyPair, accountId: string}> => {
+/**
+ * Finds the correct public key from the pair returned in getKeys based on the associated username or if not provided any account data.
+ * @param keys - An array of KeyPair objects.
+ * @param username - The username to match against the associated data.
+ * @returns The correct public key as a string.
+ * @throws Error if no account is found for the key.
+ */
+export const getCorrectPublicKey = async (keys: [KeyPair, KeyPair], username?: string): Promise<{keyPair: KeyPair, accountId: string}> => {
     for (const key of keys) {
         const publicKeyString = key.getPublicKey()?.toString();
         const { data } = await accountsByPublicKey(publicKeyString);

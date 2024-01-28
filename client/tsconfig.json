@@ -3,7 +3,8 @@
     "moduleResolution": "node",
     "jsx": "react-jsx",
     "outDir": "./lib",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "target": "es6",
   },
   "include": [
     "./src"
