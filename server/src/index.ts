@@ -9,6 +9,7 @@ import { InMemorySigner } from "@near-js/signers";
 import { actionCreators } from "@near-js/transactions";
 export const { signedDelegate } = actionCreators;
 import { FinalExecutionOutcome } from "@near-wallet-selector/core";
+import BN from 'bn.js';
 import 'dotenv/config'
 
 
@@ -112,8 +113,8 @@ export async function createAccount(
           new_account_id: accountId,
           new_public_key: publicKey,
         },
-        gas: "300000000000000",
-        attachedDeposit: "0",
+        gas: new BN("300000000000000"),
+        attachedDeposit: new BN("0"),
       });
   
       return result;
