@@ -44,6 +44,10 @@ export async function relayTransaction(action: Action, receiverId: string, relay
     const keys = await getKeys('this-shouldnt-be-required');
     const account = await getNearAccount('mainnet', keys);
 
+    if(!account || !keys){
+        throw new Error("Account or keys not defined");
+        
+    }
       
     const signedDelegate = await account.signedDelegate({
         actions: [action],
@@ -64,7 +68,7 @@ export async function relayTransaction(action: Action, receiverId: string, relay
             const result = await res.json();
             return result;
         }
-    } catch (e) {
+    } catch (e: any) {
         throw new Error(e);
     }
 }
@@ -113,17 +117,19 @@ export const getNearAccount = async (
  * @returns The correct public key as a string.
  * @throws Error if no account is found for the key.
  */
-export const getCorrectPublicKey = async (keys: [KeyPair, KeyPair], username?: string): Promise<{keyPair: KeyPair, accountId: string}> => {
+export const getCorrectPublicKey = async (keys: [KeyPair, KeyPair], username?: string): Promise<{ keyPair: KeyPair, accountId: string }> => {
     for (const key of keys) {
         const publicKeyString = key.getPublicKey()?.toString();
         const { data } = await accountsByPublicKey(publicKeyString);
 
-        const isValidKey = username ? data.some((id) => id === username) : data.length > 0;
+        if (data) {
+            const isValidKey = username ? data.some((id) => id === username) : data.length > 0;
 
-        if (isValidKey) {
-            return {
-                keyPair: key,
-                accountId: data?.[0]
+            if (isValidKey) {
+                return {
+                    keyPair: key,
+                    accountId: data?.[0]
+                };
             }
         }
     }

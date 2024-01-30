@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
+    "target": "ES2018",
     "jsx": "react-jsx",
-    "outDir": "./lib",
+    "module": "CommonJS",
+    "outDir": "dist",
+    "strict": true,
     "esModuleInterop": true,
-    "target": "es6",
+    "declaration": true 
   },
-  "include": [
-    "./src"
-  ]
+  "include": ["src/**/*", "index.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }
