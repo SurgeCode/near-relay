@@ -9,6 +9,13 @@ Meta transactions enable a signed transaction to be delegated to another account
 
 The server-side component of the package offers methods that facilitate the submission of delegated transactions, including "relay" and "createAccount".
 
+
+```
+pnpm i @near-relay/server
+
+npm i @near-relay/server
+```
+
 ### Server Example 
 Here's a basic example demonstrating how these methods can be utilized within a server:
 
@@ -45,6 +52,12 @@ NEAR_NETWORK='mainnet' or 'testnet'
 ## @near-relay/client
 
 The client-side module employs @near-js/biometric-ed25519 to facilitate the creation of keypairs using a passkey. These keypairs are then used to sign transactions, which are subsequently sent to a relayer for processing.
+
+```
+pnpm i @near-relay/client
+
+npm i @near-relay/client
+```
 
 ### Creating an Account
 
