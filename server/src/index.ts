@@ -51,20 +51,26 @@ export interface RelayOptions {
  * @throws An error if required options are missing.
  */
 
-export async function relay(encodedDelegate: Uint8Array, options: RelayOptions = {}): Promise<FinalExecutionOutcome> {
+export async function relay(encodedDelegate: Uint8Array[], options: RelayOptions = {}): Promise<FinalExecutionOutcome[]> {
 
   if (!network || !relayerAccountId || !relayerPrivateKey) {
     throw new Error("Network, relayerAccountId, and relayerPrivateKey must be provided as environment variables or arguments.");
   }
 
-  const deserializeDelegate = deserialize(
-    SCHEMA,
-    SignedDelegate,
-    Buffer.from(new Uint8Array(encodedDelegate))
-  );
+  const results: FinalExecutionOutcome[] = [];
 
+  for (const delegate of encodedDelegate) {
+    const deserializeDelegate = deserialize(
+      SCHEMA,
+      SignedDelegate,
+      Buffer.from(delegate)
+    );
 
-  return submitTransaction(deserializeDelegate);
+    const result = await submitTransaction(deserializeDelegate);
+    results.push(result);
+  }
+
+  return results;
 }
 
 /**

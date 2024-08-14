@@ -7,8 +7,8 @@ app.use(express.json());
 
 app.post('/', async (req: any, res: any) => {
     const body = req.body;
-    const result = await relay(body)
-    res.json({ message: 'Relayed', data: result });
+    const results = await relay(body)
+    res.json({ message: 'Relayed', data: results });
 });
 
 app.post('/create-account', async (req: any, res: any) => {
