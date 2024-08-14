@@ -36,19 +36,22 @@ export async function createAccount(relayerUrl: string, accountId: string): Prom
  * 
  * @param {Action[]} action - The list of actions to include in the transaction.
  * @param {string} receiverId - The ID of the receiver.
- * @param {string} network - tesnet | mainnet.
+ * @param {string} relayerUrl - Url for the relayer to which the tx will be sent
+ * @param {Account?} account - Optionally pass in local account
+ * @param {string?} network - 'mainnet | testnet'
  * @returns {Promise<any>} - Most likely a receipt (depends on format being returned by relayer).
  * @throws {Error} - If there is an error relaying the transaction.
  */
-export async function relayTransaction(action: Action, receiverId: string, relayerUrl: string) {
-    const keys = await getKeys('this-shouldnt-be-required');
-    const account = await getNearAccount('mainnet', keys);
-
-    if(!account || !keys){
-        throw new Error("Account or keys not defined");
-        
+export async function relayTransaction(action: Action, receiverId: string, relayerUrl: string, network: string = 'mainnet', account?: Account) {
+    if (!account) {
+        const keys = await getKeys('this-shouldnt-be-required');
+        const retrievedAccount = await getNearAccount(network, keys);
+        if (!retrievedAccount) {
+            throw new Error("Failed to retrieve account with provided keys.");
+        }
+        account = retrievedAccount;
     }
-      
+
     const signedDelegate = await account.signedDelegate({
         actions: [action],
         blockHeightTtl: 60,
@@ -60,7 +63,7 @@ export async function relayTransaction(action: Action, receiverId: string, relay
         const res = await fetch(relayerUrl, {
             method: "POST",
             mode: "cors",
-            body: JSON.stringify(Array.from(encodeSignedDelegate(signedDelegate))),
+            body: JSON.stringify([Array.from(encodeSignedDelegate(signedDelegate))]),
             headers: new Headers({ "Content-Type": "application/json" }),
         });
 
@@ -68,6 +71,7 @@ export async function relayTransaction(action: Action, receiverId: string, relay
             const result = await res.json();
             return result;
         }
+        throw new Error(JSON.stringify(res))
     } catch (e: any) {
         throw new Error(e);
     }
