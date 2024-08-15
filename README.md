@@ -1,14 +1,49 @@
 
 # @near-relay
 
-The @near-relay library streamlines the development of meta transactions on the NEAR Protocol, aiming to simplify the process for developers. 
+The @near-relay library facilitates meta transactions, making relaying on NEAR simple. It also supports integrated smart account management, allowing apps to handle accounts securely and efficiently with biometric authentication keeping UX simple.
 
 Meta transactions enable a signed transaction to be delegated to another account (the relayer) for submission. This delegation mechanism eliminates the need for the signer to cover gas fees, thereby enhancing the onboarding experience for users.
+
+
+# Use Cases
+
+[@near-relay/client](#near-relayclient) - Relay transactions and create accounts with extremly simple methods
+
+[@near-relay/server](#near-relayserver) - Create your own relayer service and start covering gas fees instantly
+
+[Full APP Authentication Example](#example-usage) - Dapp example leveraging account system for creating accounts and sending transactions
+
+
+
+## @near-relay/client
+
+The client-side module uses @near-js/biometric-ed25519 to facilitate the creation of keypairs using a passkey. These keypairs are then used to sign transactions, which are subsequently sent to a relayer for processing.
+
+```
+pnpm i @near-relay/client
+
+npm i @near-relay/client
+```
+
+### Creating an Account
+
+The createAccount function generates an arbitrary keypair using the devices native biometric system by default. However, you can also pass in an optional keypair object to use your own keypair. The resulting public key, along with the specified account ID, is sent to the designated relayerUrl, which should be an API endpoint invoking the createAccount method on the server side.
+
+```ts
+const receipt = await createAccount(relayerUrl: string, accountId: string, keypair: Keyapir)
+```
+
+### Relaying Transactions
+The relayTransaction function simplifies the process of obtaining a keypair from a passkey, creating a transaction, signing it, encoding it, and sending it to a relayer – all in a single line of code. The relayerUrl parameter should correspond to the appropriate API route invoking the relay() method on the server side. You can also pass a near-js account object if you would like to use your own account.
+
+```ts
+const receipt = await relayTransaction(action: Action | Action[], receiverId: string, relayerUrl: string, network: string, account: Account)
+``````
 
 ## @near-relay/server
 
 The server-side component of the package offers methods that facilitate the submission of delegated transactions, including "relay" and "createAccount".
-
 
 ```
 pnpm i @near-relay/server
@@ -25,7 +60,7 @@ import { createAccount, relay } from "@near-relay/server;
 
 app.post('/', async (req: any, res: any) => {
     const body = req.body;
-    const result = await relay(body)
+    const results = await relay(body)
    
     res.json({ message: 'Relayed', data: result });
 });
@@ -48,31 +83,6 @@ RELAYER_PRIVATE_KEY=
 
 NEAR_NETWORK='mainnet' or 'testnet'
 ``````
-
-## @near-relay/client
-
-The client-side module employs @near-js/biometric-ed25519 to facilitate the creation of keypairs using a passkey. These keypairs are then used to sign transactions, which are subsequently sent to a relayer for processing.
-
-```
-pnpm i @near-relay/client
-
-npm i @near-relay/client
-```
-
-### Creating an Account
-
-The createAccount function generates an arbitrary keypair using a passkey. The resulting public key, along with the specified account ID, is sent to the designated relayerUrl, which should be an API endpoint invoking the createAccount method on the server side.
-```ts
-const receipt = await createAccount(relayerUrl: string, accountId: string)
-```
-
-
-### Relaying Transactions
-The relayTransaction function simplifies the process of obtaining a keypair from a passkey, creating a transaction, signing it, encoding it, and sending it to a relayer – all in a single line of code. The relayerUrl parameter should correspond to the appropriate API route invoking the relay() method on the server side.
-```ts
-const receipt = await relayTransaction(action: Action, receiverId: string, relayerUrl: string)
-``````
-
 
 
 # Example Usage
