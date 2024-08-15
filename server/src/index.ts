@@ -52,9 +52,15 @@ export interface RelayOptions {
  */
 
 export async function relay(encodedDelegate: Uint8Array[], options: RelayOptions = {}): Promise<FinalExecutionOutcome[]> {
-
-  if (!network || !relayerAccountId || !relayerPrivateKey) {
-    throw new Error("Network, relayerAccountId, and relayerPrivateKey must be provided as environment variables or arguments.");
+  
+  if (!network) {
+    throw new Error("Network must be provided as an environment variable or argument.");
+  }
+  if (!relayerAccountId) {
+    throw new Error("Relayer account ID must be provided as an environment variable or argument.");
+  }
+  if (!relayerPrivateKey) {
+    throw new Error("Relayer private key must be provided as an environment variable or argument.");
   }
 
   const results: FinalExecutionOutcome[] = [];

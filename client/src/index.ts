@@ -18,20 +18,30 @@ export async function createAccount(relayerUrl: string, accountId: string, keyPa
 
     const publicKey = key.getPublicKey().toString();
 
-    const result = await fetch(relayerUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            accountId,
-            publicKey
-        })
-    })
+    try {
+        const result = await fetch(relayerUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                accountId,
+                publicKey
+            })
+        });
 
-    return await result.json();
+        if (!result.ok) {
+            const errorText = await result.text();
+            throw new Error(`Error: ${result.status} ${result.statusText} - ${errorText}`);
+        }
+
+        return await result.json();
+    } catch (error) {
+        console.error('Failed to create account:', error);
+        throw error;
+    }
+
 }
-
 /**
  * Signs a transaction and sends it to a relayer to get dispatched 
  * 
@@ -68,13 +78,15 @@ export async function relayTransaction(action: Action | Action[], receiverId: st
             headers: new Headers({ "Content-Type": "application/json" }),
         });
 
-        if (res.ok) {
-            const result = await res.json();
-            return result;
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Error: ${res.status} ${res.statusText} - ${errorText}`);
         }
-        throw new Error(JSON.stringify(res))
+
+        const result = await res.json();
+        return result;
     } catch (e: any) {
-        throw new Error(e);
+        throw new Error(`Failed to relay transaction: ${e.message}`);
     }
 }
 
