@@ -9,11 +9,12 @@ import { Account, KeyPair, Near, keyStores } from "near-api-js";
  * 
  * @param {string} relayerUrl - The URL of the server to send the request to.
  * @param {string} accountId - The ID of the account to create.
+ * @param {KeyPair} keyPair - Instead of using biometric library add your own keypair
  * @returns {Promise<any>} - A promise that resolves to the response from the server.
  */
-export async function createAccount(relayerUrl: string, accountId: string): Promise<any> {
+export async function createAccount(relayerUrl: string, accountId: string, keyPair?: KeyPair): Promise<any> {
 
-    const key = await createKey(accountId)
+    const key = keyPair || await createKey(accountId)
 
     const publicKey = key.getPublicKey().toString();
 
@@ -42,7 +43,7 @@ export async function createAccount(relayerUrl: string, accountId: string): Prom
  * @returns {Promise<any>} - Most likely a receipt (depends on format being returned by relayer).
  * @throws {Error} - If there is an error relaying the transaction.
  */
-export async function relayTransaction(action: Action, receiverId: string, relayerUrl: string, network: string = 'mainnet', account?: Account) {
+export async function relayTransaction(action: Action | Action[], receiverId: string, relayerUrl: string, network: string = 'mainnet', account?: Account) {
     if (!account) {
         const keys = await getKeys('this-shouldnt-be-required');
         const retrievedAccount = await getNearAccount(network, keys);
@@ -53,7 +54,7 @@ export async function relayTransaction(action: Action, receiverId: string, relay
     }
 
     const signedDelegate = await account.signedDelegate({
-        actions: [action],
+        actions: Array.isArray(action) ? action: [action],
         blockHeightTtl: 60,
         receiverId: receiverId,
     })
