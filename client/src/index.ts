@@ -69,13 +69,18 @@ export async function relayTransaction(action: Action | Action[], receiverId: st
         receiverId: receiverId,
     })
 
+    const headers = new Headers({ "Content-Type": "application/json" });
+    const bitteApiKey = process.env.BITTE_API_KEY;
+    if (bitteApiKey) {
+        headers.append("bitte-api-key", bitteApiKey);
+    }
 
     try {
         const res = await fetch(relayerUrl, {
             method: "POST",
             mode: "cors",
             body: JSON.stringify([Array.from(encodeSignedDelegate(signedDelegate))]),
-            headers: new Headers({ "Content-Type": "application/json" }),
+            headers: headers,
         });
 
         if (!res.ok) {

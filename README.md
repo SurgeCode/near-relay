@@ -37,6 +37,7 @@ const receipt = await createAccount(relayerUrl: string, accountId: string, keypa
 ### Relaying Transactions
 The relayTransaction function simplifies the process of obtaining a keypair from a passkey, creating a transaction, signing it, encoding it, and sending it to a relayer – all in a single line of code. The relayerUrl parameter should correspond to the appropriate API route invoking the relay() method on the server side. You can also pass a near-js account object if you would like to use your own account.
 
+If you are using this with a Bitte paymaster you can define BITTE_API_KEY in .env to be used when relaying
 ```ts
 const receipt = await relayTransaction(action: Action | Action[], receiverId: string, relayerUrl: string, network: string, account: Account)
 ``````
