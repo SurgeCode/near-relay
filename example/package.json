@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@near-js/transactions": "^1.3.1",
+    "@near-js/transactions": "1.1.2",
     "@near-relay/server": "^0.1.6",
-    "@near-relay/client": "^0.1.2",
+    "@near-relay/client": "^0.1.6",
     "@near-wallet-selector/wallet-utils": "^8.9.13",
     "@radix-ui/react-icons": "^1.3.0",
     "@radix-ui/react-slot": "^1.0.2",

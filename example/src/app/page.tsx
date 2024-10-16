@@ -6,17 +6,20 @@ import {
 } from "@near-relay/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { actionCreators } from "@near-js/transactions";
+import { Action, actionCreators } from "@near-js/transactions";
 
 export default function Home() {
- 
+  const CONTRACT_ADDRESS = "surgedev.near"
+  const RELAY_URL = "/api/relayer"
+  const CREATE_ACCOUNT_URL= "/api/relayer/create-account"
+  const NETWORK = "mainnet"
   const [accountId, setAccountId] = useState("");
   const [createReceipt, setCreateReceipt] = useState<any>();
   const [relayReceipt, setRelayReceipt] = useState<any>();
 
   const handleCreateAccount = async () => {
     const receipt = await createAccount(
-      "/api/relayer/create-account",
+      CREATE_ACCOUNT_URL,
       accountId,
       {password: "lfg"}
     );
@@ -25,7 +28,7 @@ export default function Home() {
 
   const handleRelay = async () => {
 
-    const action = actionCreators.functionCall(
+    const action: Action = actionCreators.functionCall(
       'set_greeting',
       {
           greeting: "hello"
@@ -33,7 +36,7 @@ export default function Home() {
      BigInt(30000000000000), 
      BigInt(0)
     )
-    const receipt = await relayTransaction(action as any, "surgedev.near", "/api/relayer", "mainnet", {password: "lfg"});
+    const receipt = await relayTransaction(action, CONTRACT_ADDRESS, RELAY_URL, NETWORK, {password: "lfg"});
 
     setRelayReceipt(JSON.stringify(receipt));
   };
