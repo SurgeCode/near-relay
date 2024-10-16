@@ -37,10 +37,15 @@ export async function getBiometricAccount(network: string): Promise<Account> {
     return retrievedAccount;
 }
 
-export async function getPasswordBasedAccount(receiverId: string, password: string, network: string): Promise<Account> {
-    const storedAccount = localStorage.getItem(`near-account-${receiverId}`);
+export async function getPasswordBasedAccount(password: string, network: string): Promise<Account> {
+    // TODO: Add support for multiple accounts later
+    const storedAccounts = Object.keys(localStorage).filter(key => key.startsWith('near-account-'));
+    if (storedAccounts.length === 0) {
+        throw new Error("No stored accounts found.");
+    }
+    const storedAccount = localStorage.getItem(storedAccounts[0]);
     if (!storedAccount) {
-        throw new Error("No stored account found for the given receiver ID.");
+        throw new Error("Failed to retrieve stored account.");
     }
     const { encryptedPrivateKey, publicKey, accountId } = JSON.parse(storedAccount);
     const privateKey = decryptPrivateKey(encryptedPrivateKey, password);

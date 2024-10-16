@@ -72,25 +72,28 @@ export async function relayTransaction(
         password?: string
     } = {}
 ) {
+
     let account = options.account;
 
     if (options.password) {
-        account = await getPasswordBasedAccount(receiverId, options.password, network);
+        account = await getPasswordBasedAccount(options.password, network);
     } else {
         account = await getBiometricAccount(network);
     }
 
     if (!account) {
+        console.error("Failed to retrieve or create an account");
         throw new Error("Failed to retrieve or create an account.");
     }
-
+    
     const signedDelegate = await account.signedDelegate({
         actions: Array.isArray(action) ? action : [action],
         blockHeightTtl: 60,
         receiverId: receiverId,
     });
 
-    return await relayRequest(signedDelegate, relayerUrl);
+    const result = await relayRequest(signedDelegate, relayerUrl);
+    return result;
 }
 
 
@@ -102,10 +105,11 @@ async function relayRequest(signedDelegate: any, relayerUrl: string): Promise<an
     }
 
     try {
+        const encodedDelegate = encodeSignedDelegate(signedDelegate);
         const res = await fetch(relayerUrl, {
             method: "POST",
             mode: "cors",
-            body: JSON.stringify([Array.from(encodeSignedDelegate(signedDelegate))]),
+            body: JSON.stringify(Array.from(encodedDelegate)),
             headers: headers,
         });
 
