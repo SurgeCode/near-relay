@@ -1,15 +1,15 @@
 "use client";
-
 import { useState } from "react";
 import {
   relayTransaction,
   createAccount,
-  getMintAction,
 } from "@near-relay/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { actionCreators } from "@near-js/transactions";
 
 export default function Home() {
+ 
   const [accountId, setAccountId] = useState("");
   const [createReceipt, setCreateReceipt] = useState<any>();
   const [relayReceipt, setRelayReceipt] = useState<any>();
@@ -17,22 +17,25 @@ export default function Home() {
   const handleCreateAccount = async () => {
     const receipt = await createAccount(
       "/api/relayer/create-account",
-      accountId
+      accountId,
+      {password: "lfg"}
     );
     setCreateReceipt(JSON.stringify(receipt.transaction));
   };
 
   const handleRelay = async () => {
-    const mintAction = getMintAction(
-      "drop.mintbase1.near",
-      "mdu45CgSh5vUq9OFNTfJoCawGE3xGIbAXfWBTeoCqoM"
-    );
-    const receipt = await relayTransaction(
-      mintAction,
-      "0.drop.proxy.mintbase.near",
-      "/api/relayer"
-    );
-    setRelayReceipt(JSON.stringify(receipt.transaction));
+
+    const action = actionCreators.functionCall(
+      'set_greeting',
+      {
+          greeting: "hello"
+     },
+     BigInt(30000000000000), 
+     BigInt(0)
+    )
+    const receipt = await relayTransaction(action as any, "surgedev.near", "/api/relayer", "mainnet", {password: "lfg"});
+
+    setRelayReceipt(JSON.stringify(receipt));
   };
 
   return (
