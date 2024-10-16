@@ -1,58 +1,35 @@
-import { deserialize} from "borsh";
-import { SCHEMA } from "../near-schema";
-import { SignedDelegate } from "@near-js/transactions";
-import { Account } from "@near-js/accounts";
-import { KeyPair } from "@near-js/crypto";
-import { InMemoryKeyStore } from "@near-js/keystores";
-import { JsonRpcProvider } from "@near-js/providers";
-import { InMemorySigner } from "@near-js/signers";
-import { actionCreators } from "@near-js/transactions";
-export const { signedDelegate } = actionCreators;
-import { FinalExecutionOutcome } from "@near-wallet-selector/core";
-import BN from 'bn.js';
+
 import 'dotenv/config'
+import { deserialize } from 'borsh';
+import { Account, connect, KeyPair } from "near-api-js";
+import { SCHEMA, SignedDelegate, actionCreators } from "@near-js/transactions";
+import { FinalExecutionOutcome } from 'near-api-js/lib/providers';
+import BN from 'bn.js';
+import { InMemoryKeyStore } from 'near-api-js/lib/key_stores';
 
-
-
-const relayerAccountId: any = process.env.RELAYER_ACCOUNT_ID 
-const relayerPrivateKey: any = process.env.RELAYER_PRIVATE_KEY
-const network:any = process.env.NEAR_NETWORK
+const relayerAccountId: string = process.env.RELAYER_ACCOUNT_ID || '';
+const relayerPrivateKey: string = process.env.RELAYER_PRIVATE_KEY || '';
+const network: string = process.env.NEAR_NETWORK || '';
 
 /**
  * Configuration options for the relay function.
  */
 export interface RelayOptions {
-  /**
-   * The NEAR network. Defaults to the value of the NEAR_NETWORK environment variable.
-   */
   network?: string;
-  /**
-   * The NEAR relayer account ID. Defaults to the value of the RELAYER_ACCOUNT_ID environment variable.
-   */
   accountId?: string;
-  /**
-   * The NEAR relayer private key. Defaults to the value of the RELAYER_PRIVATE_KEY environment variable.
-   */
   privateKey?: string;
 }
 
 /**
  * Relay a signed transaction.
  *
- * @param encodedDelegate - The encoded signed transaction to relay. To obtain this, you can use the following:
- *  Call the signedDelegate with the near-api-js account object.
- *  Encode the signedDelegate to a Uint8Array:
- * @example
- *    const signedDelegate = await accountObj.signedDelegate({});
- *    const encodedDelegate = new Uint8Array(signedDelegate.encode());
- *    
+ * @param encodedDelegate - The encoded signed transaction to relay.
  * @param options - Configuration options for the relay function.
  * @returns A promise that resolves to the final execution outcome.
  * @throws An error if required options are missing.
  */
+export async function relay(encodedDelegate: Buffer, options: RelayOptions = {}): Promise<FinalExecutionOutcome> {
 
-export async function relay(encodedDelegate: Uint8Array[], options: RelayOptions = {}): Promise<FinalExecutionOutcome[]> {
-  
   if (!network) {
     throw new Error("Network must be provided as an environment variable or argument.");
   }
@@ -63,45 +40,17 @@ export async function relay(encodedDelegate: Uint8Array[], options: RelayOptions
     throw new Error("Relayer private key must be provided as an environment variable or argument.");
   }
 
-  const results: FinalExecutionOutcome[] = [];
+  const deserializedTx: SignedDelegate = deserialize(SCHEMA.SignedDelegate, Buffer.from(encodedDelegate)) as SignedDelegate;
+  
+  const relayerAccount: Account = await getRelayer();
+  
+  const receipt = await relayerAccount.signAndSendTransaction({
+    actions: [actionCreators.signedDelegate(deserializedTx)],
+    receiverId: deserializedTx.delegateAction.senderId
+  });
 
-  for (const delegate of encodedDelegate) {
-    const deserializeDelegate = deserialize(
-      SCHEMA,
-      SignedDelegate,
-      Buffer.from(delegate)
-    );
-
-    const result = await submitTransaction(deserializeDelegate);
-    results.push(result);
-  }
-
-  return results;
+  return receipt;
 }
-
-/**
- * Submit a NEAR transaction.
- * @param delegate - The signed delegate object.
- * @returns A promise that resolves to the final execution outcome.
- * @throws An error if the submission fails.
- */
-async function submitTransaction(
-  delegate: SignedDelegate,
-): Promise<FinalExecutionOutcome> {
-  try {
-    const relayerAccount = await getRelayer();
-
-    const result = await relayerAccount.signAndSendTransaction({
-      actions: [signedDelegate(delegate)],
-      receiverId: delegate.delegateAction.senderId,
-    });
-
-    return result;
-  } catch (error) {
-    throw error;
-  }
-}
-
 
 /**
  * Creates a new account with the given account ID and public key.
@@ -111,53 +60,44 @@ async function submitTransaction(
  * @return {Promise<FinalExecutionOutcome>} The result of the account creation process.
  */
 export async function createAccount(
-    accountId: string,
-    publicKey: string,
-  ): Promise<FinalExecutionOutcome> {
+  accountId: string,
+  publicKey: string,
+): Promise<FinalExecutionOutcome> {
+  try { 
+    const relayerAccount = await getRelayer();
 
-    try { 
-      const relayerAccount = await getRelayer()  
-  
-      const result = await relayerAccount.functionCall({
-        contractId: network == "mainnet" ? "near" : "testnet",
-        methodName: "create_account",
-        args: {
-          new_account_id: accountId,
-          new_public_key: publicKey,
-        },
-        gas: new BN("300000000000000"),
-        attachedDeposit: new BN("0"),
-      });
-  
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  }
+    const result = await relayerAccount.functionCall({
+      contractId: network === "mainnet" ? "near" : "testnet",
+      methodName: "create_account",
+      args: {
+        new_account_id: accountId,
+        new_public_key: publicKey,
+      },
+      gas: new BN("300000000000000"),
+      attachedDeposit: new BN("0"),
+    });
 
-  /**
-   * Retrieves the relayer account using the provided network and account ID.
-   *
-   * @return {Promise<Account>} The relayer account object.
-   */
-  async function getRelayer(){
-    
-    const provider = new JsonRpcProvider({
-        url: `https://rpc.${network}.near.org`,
-      });
-  
-      const keyStore = new InMemoryKeyStore();
-      await keyStore.setKey(network, relayerAccountId, KeyPair.fromString(relayerPrivateKey));
-  
-      const signer = new InMemorySigner(keyStore);
-  
-        return new Account(
-        {
-          networkId: network,
-          provider,
-          signer,
-          jsvmAccountId: "",
-        },
-        relayerAccountId
-      );
+    return result;
+  } catch (error) {
+    throw error;
   }
+}
+
+/**
+ * Retrieves the relayer account using the provided network and account ID.
+ *
+ * @return {Promise<Account>} The relayer account object.
+ */
+async function getRelayer(): Promise<Account> {
+    const keyStore: InMemoryKeyStore = new InMemoryKeyStore();
+    await keyStore.setKey(network, relayerAccountId, KeyPair.fromString(relayerPrivateKey));
+
+    const config = {
+        networkId: network,
+        keyStore,
+        nodeUrl: `https://rpc.${network}.near.org`,
+    };
+
+    const near = await connect(config);
+    return await near.account(relayerAccountId);
+}

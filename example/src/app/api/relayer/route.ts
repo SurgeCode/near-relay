@@ -1,11 +1,9 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { relay } from '@near-relay/server'
 
 export async function POST(req: NextRequest, res: NextResponse) {
     try {
-        const transaction = await req.json();
-
+        const transaction: Buffer = await req.json();
         const receipt = await relay(transaction)
 
         return NextResponse.json(receipt, {
