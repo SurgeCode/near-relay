@@ -83,6 +83,21 @@ export async function createAccount(
   }
 }
 
+export async function createSubAccount(
+  accountId: string,
+  publicKey: string,
+): Promise<FinalExecutionOutcome> {
+  try { 
+    const relayerAccount = await getRelayer();
+
+    const result = relayerAccount.createAccount(`${accountId}.${relayerAccount.accountId}`, publicKey, new BN(0))
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+
 /**
  * Retrieves the relayer account using the provided network and account ID.
  *

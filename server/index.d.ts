@@ -9,4 +9,6 @@ declare module '@near-relay/server' {
     export function relay(encodedDelegate: Buffer, options?: RelayOptions): Promise<FinalExecutionOutcome>;
   
     export function createAccount(accountId: string, publicKey: string): Promise<FinalExecutionOutcome>;
+
+    export function createSubAccount(accountId: string, publicKey: string): Promise<FinalExecutionOutcome>;
   }
