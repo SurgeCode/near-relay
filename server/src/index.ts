@@ -90,7 +90,7 @@ export async function createSubAccount(
   try { 
     const relayerAccount = await getRelayer();
 
-    const result = relayerAccount.createAccount(`${accountId}.${relayerAccount.accountId}`, publicKey, new BN(0))
+    const result = relayerAccount.createAccount(accountId, publicKey, new BN(0))
 
     return result;
   } catch (error) {
