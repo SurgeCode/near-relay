@@ -1,212 +1,146 @@
+# @near-relay 
 
-# @near-relay
+## Overview
 
-The @near-relay library facilitates meta transactions, making relaying on NEAR simple. It also supports integrated smart account management, allowing apps to handle accounts securely and efficiently with biometric authentication keeping UX simple.
+@near-relay is a powerful library that simplifies meta transactions and account management on the NEAR blockchain. It provides a seamless way to create accounts and relay transactions without users needing to manage gas fees directly.
 
-Meta transactions enable a signed transaction to be delegated to another account (the relayer) for submission. This delegation mechanism eliminates the need for the signer to cover gas fees, thereby enhancing the onboarding experience for users.
+## Key Features
 
+- **Meta Transactions**: Create and use relayers to delegate transaction submission
+- **Password-Based Creation**: Create accounts securely using a password
+- **Biometric-Based Creation**: Create accounts using device passkeys and biometric authentication
+- **KeyPair-Based Creation**: Create accounts using custom ED25519 keypairs
 
-# Use Cases
+## Installation
 
-[@near-relay/client](#near-relayclient) - Relay transactions and create accounts with extremly simple methods
+Install the library using your preferred package manager:
 
-[@near-relay/server](#near-relayserver) - Create your own relayer service and start covering gas fees instantly
-
-[Full APP Authentication Example](#example-usage) - Dapp example leveraging account system for creating accounts and sending transactions
-
-
-
-## @near-relay/client
-
-The client-side module uses @near-js/biometric-ed25519 to facilitate the creation of keypairs using a passkey. These keypairs are then used to sign transactions, which are subsequently sent to a relayer for processing.
+```bash
+# Using pnpm
+pnpm i @near-relay/client @near-relay/server
 
 ```
-pnpm i @near-relay/client
 
-npm i @near-relay/client
-```
+## Client-Side Usage
 
 ### Creating an Account
 
-The createAccount function generates an arbitrary keypair using the devices native biometric system by default. However, you can also pass in an optional keypair object to use your own keypair. The resulting public key, along with the specified account ID, is sent to the designated relayerUrl, which should be an API endpoint invoking the createAccount method on the server side.
+The `createAccount` function supports multiple account creation methods:
 
-```ts
-const receipt = await createAccount(relayerUrl: string, accountId: string, keypair: Keyapir)
+```typescript
+import { createAccount } from '@near-relay/client';
+
+// Passkey-based account creation (default)
+const passkeyReceipt = await createAccount(
+  '/api/relayer/create-account', 
+  'myaccountid.near'
+);
+
+// Password-based account creation
+const passwordReceipt = await createAccount(
+  '/api/relayer/create-account', 
+  'myaccountid.near',
+  { password: 'securepassword' }
+);
+
+// Custom keypair account creation
+import { KeyPair } from 'near-api-js';
+const keyPair = KeyPair.fromRandom('ed25519');
+const keypairReceipt = await createAccount(
+  '/api/relayer/create-account', 
+  'myaccountid.near',
+  { keyPair }
+);
 ```
 
 ### Relaying Transactions
-The relayTransaction function simplifies the process of obtaining a keypair from a passkey, creating a transaction, signing it, encoding it, and sending it to a relayer – all in a single line of code. The relayerUrl parameter should correspond to the appropriate API route invoking the relay() method on the server side. You can also pass a near-js account object if you would like to use your own account.
 
-If you are using this with a Bitte paymaster you can define BITTE_API_KEY in .env to be used when relaying
-```ts
-const receipt = await relayTransaction(action: Action | Action[], receiverId: string, relayerUrl: string, network: string, account: Account)
-``````
+The `relayTransaction` function simplifies transaction submission:
 
-## @near-relay/server
+```typescript
+import { relayTransaction, actionCreators } from '@near-relay/client';
 
-The server-side component of the package offers methods that facilitate the submission of delegated transactions, including "relay" and "createAccount".
+// Create a function call action
+const action = actionCreators.functionCall(
+  'set_greeting', //method name
+  { greeting: "hello" }, //params
+  BigInt(30000000000000), // gas
+  BigInt(0) // deposit
+);
 
-```
-pnpm i @near-relay/server
-
-npm i @near-relay/server
-```
-
-### Server Example 
-Here's a basic example demonstrating how these methods can be utilized within a server:
-
-[This code can be easily emulated to produce simple relayer](https://github.com/SurgeCode/near-relay/blob/main/server/server.ts)
-```ts
-import { createAccount, relay } from "@near-relay/server;
-
-app.post('/', async (req: any, res: any) => {
-    const body = req.body;
-    const results = await relay(body)
-   
-    res.json({ message: 'Relayed', data: result });
-});
-
-app.post('/create-account', async (req: any, res: any) => {
-    const body = req.body;
-    const result = await createAccount(body.accountId, body.publicKey)
-    res.json({ message: 'Relayed', data: result });
-});
+// Relay the transaction
+const receipt = await relayTransaction(
+  action,           // Transaction action
+  'contract.near',  // Receiver contract
+  '/api/relayer',   // Relay endpoint
+  'mainnet',        // Network
+  {                 // Optional account authentication
+    password: 'securepassword'
+  }
+);
 ```
 
-As far as environment variables you need to have a near accounts credentials set
+## Server-Side Implementation
 
-```ts
-//id of the relayer account
-RELAYER_ACCOUNT_ID=
+### Environment Variables
 
-//private key of the relayer account (corresponding to the previous ID)
-RELAYER_PRIVATE_KEY=
+Configure your relayer account:
 
-NEAR_NETWORK='mainnet' or 'testnet'
-``````
-
-
-# Example Usage
-
-To get started with the `@near-relay` project, clone the example directory which includes a fully functional NEXT.js 14 project. This project is equipped with a relayer API and a frontend interface that allows for the creation of wallets and the relaying of transactions.
-
-### Frontend Implementation
-
-Within the `page.tsx` file of the example project, you'll find the following key code snippets that demonstrate how to create a new account and relay a transaction using the `@near-relay/client` package. The code below is a simplified version, focusing on the main functionality:
-
-For the relay function a simple minting action is passed into the arguments with a helper method that creates the transaction object. You can create your own actions for calling any contract with near-api-js
-
-
-```tsx
-"use client";
-
-import { useState } from "react";
-import {
-  relayTransaction,
-  createAccount,
-  getMintAction,
-} from "@near-relay/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-export default function Home() {
-
-
-  const handleCreateAccount = async () => {
-    const receipt = await createAccount(
-      "/api/relayer/create-account",
-      accountId
-    );
-    setCreateReceipt(JSON.stringify(receipt.transaction));
-  };
-
-  const handleRelay = async () => {
-    const mintAction = getMintAction(
-      "drop.mintbase1.near",
-      "mdu45CgSh5vUq9OFNTfJoCawGE3xGIbAXfWBTeoCqoM"
-    );
-    const receipt = await relayTransaction(
-      mintAction,
-      "0.drop.proxy.mintbase.near",
-      "/api/relayer"
-    );
-    setRelayReceipt(JSON.stringify(receipt.transaction));
-  };
-
-  return (
-
-      <div className="mb-10 mt-2">
-        <Button onClick={handleCreateAccount} disabled={!accountId}>
-          Create Account
-        </Button>
-      </div>
-
-      <Button className="mb-5" onClick={handleRelay}>
-        Relay Transaction
-      </Button>
- 
-    </main>
-  );
-}
-
+```typescript
+// .env file
+RELAYER_ACCOUNT_ID=your_relayer_account.near
+RELAYER_PRIVATE_KEY=your_private_key
+NEAR_NETWORK=mainnet  # or 'testnet'
 ```
 
+### Create Account Endpoint
 
-
-The backend includes endpoints for account creation and transaction relaying with the account set in the environment variables
-
-### Create Account
-```ts
-
+```typescript
 import { NextRequest, NextResponse } from "next/server";
-import { createAccount } from '@near-relay/server'
+import { createAccount } from '@near-relay/server';
+import { FinalExecutionStatus } from "near-api-js/lib/providers";
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     try {
         const { publicKey, accountId } = await req.json();
 
-        const receipt = await createAccount(accountId, publicKey)
+        const receipt = await createAccount(accountId, publicKey);
+        
+        // Check for successful account creation
+        if ((receipt.status as FinalExecutionStatus).SuccessValue === 'ZmFsc2U=') {
+            return NextResponse.json(
+                { error: "Account creation failed" },
+                { status: 409 }
+            );
+        }
 
-        return NextResponse.json(receipt, {
-            status: 200,
-            headers: { "content-type": "application/json" },
-        });
+        return NextResponse.json(receipt, { status: 201 });
     } catch (error: any) {
-        console.error(error);
         return NextResponse.json(
-            { msg: error.toString(), error },
-            { headers: { "content-type": "application/json" }, status: 500 }
+            { error: error.message || "Internal server error" },
+            { status: 500 }
         );
     }
 }
-
 ```
 
-### Relay
+### Transaction Relay Endpoint
 
-
-```ts
-
+```typescript
 import { NextRequest, NextResponse } from "next/server";
-import { relay } from '@near-relay/server'
+import { relay } from '@near-relay/server';
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     try {
-        const transaction = await req.json();
+        const transaction: Buffer = await req.json();
+        const receipt = await relay(transaction);
 
-        const receipt = await relay(transaction)
-
-        return NextResponse.json(receipt, {
-            status: 200,
-            headers: { "content-type": "application/json" },
-        });
+        return NextResponse.json(receipt, { status: 200 });
     } catch (error: any) {
-        console.error(error);
         return NextResponse.json(
-            { msg: error.toString(), error },
-            { headers: { "content-type": "application/json" }, status: 500 }
+            { error: error.toString() },
+            { status: 500 }
         );
     }
 }
-
 ```

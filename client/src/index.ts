@@ -3,6 +3,7 @@ import { Action, encodeSignedDelegate } from "@near-js/transactions";
 import { Account, KeyPair} from "near-api-js";
 import { encryptPrivateKey, storeEncryptedAccount } from "./utils";
 import { createAccountRequest, getBiometricAccount, getPasswordBasedAccount } from "./account";
+import { FinalExecutionOutcome } from "@near-wallet-selector/core";
 /**
  * Generates a new keypair locally and stores it in passkey, local storage, or uses a provided keypair,
  * then sends the account ID and publicKey to a relayer to be created on chain via a smart contract call
@@ -19,7 +20,7 @@ export async function createAccount(relayerUrl: string, accountId: string, optio
     keyPair?: KeyPair,
     password?: string,
     usePasskey?: boolean
-} = {}): Promise<any> {
+} = {}): Promise<FinalExecutionOutcome> {
     let key: KeyPair;
 
     if (options.keyPair) {
@@ -92,12 +93,11 @@ export async function relayTransaction(
         receiverId: receiverId,
     });
 
-    const result = await relayRequest(signedDelegate, relayerUrl);
-    return result;
+    return await relayRequest(signedDelegate, relayerUrl);
 }
 
 
-async function relayRequest(signedDelegate: any, relayerUrl: string): Promise<any> {
+async function relayRequest(signedDelegate: any, relayerUrl: string): Promise<FinalExecutionOutcome> {
     const headers = new Headers({ "Content-Type": "application/json" });
     const bitteApiKey = process.env.BITTE_API_KEY;
     if (bitteApiKey) {

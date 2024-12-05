@@ -16,8 +16,8 @@ const network: string = process.env.NEAR_NETWORK || '';
  */
 export interface RelayOptions {
   network?: string;
-  accountId?: string;
-  privateKey?: string;
+  relayerAccountId?: string;
+  relayerPrivateKey?: string;
 }
 
 /**
@@ -30,13 +30,13 @@ export interface RelayOptions {
  */
 export async function relay(encodedDelegate: Buffer, options: RelayOptions = {}): Promise<FinalExecutionOutcome> {
 
-  if (!network) {
+  if (!network && !options.network) {
     throw new Error("Network must be provided as an environment variable or argument.");
   }
-  if (!relayerAccountId) {
+  if (!relayerAccountId && !options.relayerAccountId) {
     throw new Error("Relayer account ID must be provided as an environment variable or argument.");
   }
-  if (!relayerPrivateKey) {
+  if (!relayerPrivateKey && !options.relayerPrivateKey) {
     throw new Error("Relayer private key must be provided as an environment variable or argument.");
   }
 

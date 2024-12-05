@@ -2,6 +2,7 @@ import { getKeys } from "@near-js/biometric-ed25519";
 import { decryptPrivateKey } from "./utils";
 import { Account, KeyPair, keyStores, Near } from "near-api-js";
 import { accountsByPublicKey } from "@mintbase-js/data";
+import { FinalExecutionOutcome } from "@near-wallet-selector/core";
 
 /**
  * Fetches account creation from the relayer.
@@ -11,7 +12,7 @@ import { accountsByPublicKey } from "@mintbase-js/data";
  * @returns {Promise<any>} The response from the relayer.
  * @throws {Error} If the fetch request fails.
  */
-export async function createAccountRequest(relayerUrl: string, accountId: string, publicKey: string): Promise<any> {
+export async function createAccountRequest(relayerUrl: string, accountId: string, publicKey: string): Promise<FinalExecutionOutcome> {
     const result = await fetch(relayerUrl, {
         method: 'POST',
         headers: {
@@ -38,7 +39,6 @@ export async function getBiometricAccount(network: string): Promise<Account> {
 }
 
 export async function getPasswordBasedAccount(password: string, network: string): Promise<Account> {
-    // TODO: Add support for multiple accounts later
     const storedAccounts = Object.keys(localStorage).filter(key => key.startsWith('near-account-'));
     if (storedAccounts.length === 0) {
         throw new Error("No stored accounts found.");
